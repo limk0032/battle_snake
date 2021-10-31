@@ -16,7 +16,7 @@ class TreeNode(object):
     def get_length_to_root(self):
         length_to_root = 0
         tmp = self
-        while tmp.parent != None:
+        while tmp.parent is not None:
             length_to_root = length_to_root + 1
             tmp = tmp.parent
         return length_to_root
@@ -25,7 +25,7 @@ class TreeNode(object):
         data_list = []
         data_list.insert(0, self.data)
         tmp = self
-        while tmp.parent != None:
+        while tmp.parent is not None:
             tmp = tmp.parent
             data_list.insert(0, tmp.data)
         return data_list
