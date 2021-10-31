@@ -5,6 +5,7 @@ import mover_max_free_space
 import numpy as np
 import tree_node
 
+
 def get_surrounding_tiles(tile: Dict[str, int], board_height: int, board_width: int):
     result = []
     if tile["x"] + 1 < board_width:
@@ -19,11 +20,11 @@ def get_surrounding_tiles(tile: Dict[str, int], board_height: int, board_width: 
 
 
 def populate_min_step_to_reach_matrix(
-    min_step_to_reach_matrix: List[List[int]],
-    body: List[dict],
-    other_snakes_body: List[dict],
-    board_height: int,
-    board_width: int,
+        min_step_to_reach_matrix: List[List[int]],
+        body: List[dict],
+        other_snakes_body: List[dict],
+        board_height: int,
+        board_width: int,
 ):
     matrix_before_change = None
     matrix_after_change = False
@@ -59,7 +60,7 @@ def populate_min_step_to_reach_matrix(
                     surrounding_tiles_with_min_steps = list(
                         filter(
                             lambda n: min_step_to_reach_matrix[n["x"]][n["y"]]
-                            == surrounding_min_step,
+                                      == surrounding_min_step,
                             surrounding_tiles,
                         )
                     )
@@ -69,7 +70,7 @@ def populate_min_step_to_reach_matrix(
                         not_accessible_tiles = other_snakes_body + body
                     else:
                         not_accessible_tiles = (
-                            other_snakes_body + body[:-(surrounding_min_step)]
+                                other_snakes_body + body[:-(surrounding_min_step)]
                         )
                     if tile in not_accessible_tiles:
                         continue
@@ -103,12 +104,12 @@ def get_step_to_reach_matrix_str(min_step_to_reach_matrix: List[List[int]]):
 
 
 def populate_shortest_paths_tree(
-    min_step_to_reach_matrix: List[List[int]],
-    start,
-    end,
-    board_height,
-    board_width,
-    parent_tree_node,
+        min_step_to_reach_matrix: List[List[int]],
+        start,
+        end,
+        board_height,
+        board_width,
+        parent_tree_node,
 ):
     if start == end:
         return
@@ -131,7 +132,7 @@ def populate_shortest_paths_tree(
         (
             filter(
                 lambda t: min_step_to_reach_matrix[t["x"]][t["y"]]
-                == min_step_to_reach_matrix[start["x"]][start["y"]] - 1,
+                          == min_step_to_reach_matrix[start["x"]][start["y"]] - 1,
                 surrounding_tiles,
             )
         )
@@ -153,7 +154,7 @@ def populate_shortest_paths_tree(
 
 
 def get_shortest_paths_to_target(
-    body, other_snakes, board_height, board_width, target, foods
+        body, other_snakes, board_height, board_width, target, foods
 ):
     other_snakes_body = []
     for other_snake in other_snakes:
@@ -188,8 +189,8 @@ def get_shortest_paths_to_target(
             number_of_food_picked_up_along_path = 0
             for food in foods:
                 if food in shortest_path:
-                    number_of_food_picked_up_along_path =number_of_food_picked_up_along_path+1
-            body_after_moving_to_parent = body[: -len(shortest_path) + number_of_food_picked_up_along_path + 1 +1]
+                    number_of_food_picked_up_along_path = number_of_food_picked_up_along_path + 1
+            body_after_moving_to_parent = body[: -len(shortest_path) + number_of_food_picked_up_along_path + 1 + 1]
             # 1 for head, 1 for tail
             if shortest_path[-1] not in body_after_moving_to_parent:
                 shortest_paths_valid.append(shortest_path)
@@ -207,7 +208,7 @@ def get_first_shortest_path_to_food(data: dict):
     body = data["you"]["body"]
     other_snakes = data["board"]["snakes"]
     other_snakes = list(filter(lambda s: s["body"] != body, other_snakes))
-    mmfs = MoverMaxFreeSpace()
+    mmfs = mover_max_free_space.MoverMaxFreeSpace()
     foods_sorted_by_distance = mmfs.get_foods_sorted_by_distance_asc(
         head, foods
     )
@@ -274,7 +275,7 @@ def get_move_in_shortest_path_to_food(data):
         )
         print_min_step_to_reach_matrix(min_step_to_reach_matrix)
         print(f"path_to_tail:{paths_to_tail}")
-        if len(paths_to_tail)==0:
+        if len(paths_to_tail) == 0:
             return None
         path = paths_to_tail[0]  # first shortest path to tail
     # print(f'path:{path}')
@@ -295,7 +296,7 @@ def choose_move(data: dict) -> str:
     # return get_move_with_max_free_space(data)
     direction = get_move_in_shortest_path_to_food(data)
     if direction == None:
-        mmfs = MoverMaxFreeSpace()
+        mmfs = mover_max_free_space.MoverMaxFreeSpace()
         direction = mmfs.get_move_with_max_free_space(data)
     print(f'turn:{data["turn"]}, direction:{direction}')
     print("=======================\n\n")

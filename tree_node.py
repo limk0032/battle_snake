@@ -23,9 +23,9 @@ class TreeNode(object):
 
     def get_data_list_from_root(self):
         data_list = []
-        data_list.insert(0,self.data)
+        data_list.insert(0, self.data)
         tmp = self
         while tmp.parent != None:
             tmp = tmp.parent
-            data_list.insert(0,tmp.data)
+            data_list.insert(0, tmp.data)
         return data_list

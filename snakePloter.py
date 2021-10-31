@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np
 from matplotlib.table import Table
 
 
@@ -57,4 +56,3 @@ def plot_snake(data):
                 backgroundcolor="pink",
             )
     plt.show()
-    
