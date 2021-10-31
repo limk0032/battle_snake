@@ -1,10 +1,9 @@
 import random
 from typing import Dict, List
 
+import mover_max_free_space
 import numpy as np
 import tree_node
-import mover_max_free_space
-
 
 def get_surrounding_tiles(tile: Dict[str, int], board_height: int, board_width: int):
     result = []
@@ -124,6 +123,7 @@ def populate_shortest_paths_tree(
         return
     if min_step_to_reach_matrix[start["x"]][start["y"]] == "-":
         return
+
     # TODO: can change here to to support second, third and etc shortest paths
     # surrounding_tiles = sorted(surrounding_tiles, key=lambda c:len(n))
     # surrounding_tiles_min_steps = min(list(map(lambda t: min_step_to_reach_matrix[t['x']][t['y']], surrounding_tiles)))
@@ -152,7 +152,9 @@ def populate_shortest_paths_tree(
             )
 
 
-def get_shortest_paths_to_target(body, other_snakes, board_height, board_width, target):
+def get_shortest_paths_to_target(
+    body, other_snakes, board_height, board_width, target, foods
+):
     other_snakes_body = []
     for other_snake in other_snakes:
         other_snakes_body = other_snakes_body + other_snake["body"]
@@ -180,7 +182,18 @@ def get_shortest_paths_to_target(body, other_snakes, board_height, board_width, 
     if len(shortest_paths_tree_root_node.children) != 0:
         shortest_paths = shortest_paths_tree_root_node.tree2list()
         [item.reverse() for item in shortest_paths]
-        return (min_step_to_reach_matrix, shortest_paths)
+        shortest_paths_valid = []
+        #
+        for shortest_path in shortest_paths:
+            number_of_food_picked_up_along_path = 0
+            for food in foods:
+                if food in shortest_path:
+                    number_of_food_picked_up_along_path =number_of_food_picked_up_along_path+1
+            body_after_moving_to_parent = body[: -len(shortest_path) + number_of_food_picked_up_along_path + 1 +1]
+            # 1 for head, 1 for tail
+            if shortest_path[-1] not in body_after_moving_to_parent:
+                shortest_paths_valid.append(shortest_path)
+        return (min_step_to_reach_matrix, shortest_paths_valid)
     else:
         print("valid path not found")
         return (min_step_to_reach_matrix, [])
@@ -194,13 +207,16 @@ def get_first_shortest_path_to_food(data: dict):
     body = data["you"]["body"]
     other_snakes = data["board"]["snakes"]
     other_snakes = list(filter(lambda s: s["body"] != body, other_snakes))
-    foods_sorted_by_distance = mover_max_free_space.get_foods_sorted_by_distance_asc(head, foods)
+    mmfs = MoverMaxFreeSpace()
+    foods_sorted_by_distance = mmfs.get_foods_sorted_by_distance_asc(
+        head, foods
+    )
     for food in foods:
         (
             min_step_to_reach_matrix_head_to_food,
             shortest_paths_head_to_food,
         ) = get_shortest_paths_to_target(
-            body, other_snakes, board_height, board_width, food
+            body, other_snakes, board_height, board_width, food, foods
         )
         # print(f'shortest_paths_head_to_food:\nhead:{body[0]},\nfood:{foods[0]},\nmin_step_to_reach_matrix_head_to_food:\n{get_step_to_reach_matrix_str(min_step_to_reach_matrix_head_to_food)}shortest_paths_head_to_food:\n' + '\n'.join(' '.join(map(str, sl)) for sl in shortest_paths_head_to_food) + '\n---------')
         for path in shortest_paths_head_to_food:
@@ -219,6 +235,7 @@ def get_first_shortest_path_to_food(data: dict):
                 board_height,
                 board_width,
                 tail_after_eating_food,
+                foods,
             )
             # return first shortest path to food, if there is valid path for food_to_tail after eaten food
             path.reverse()
@@ -241,6 +258,7 @@ def get_move_in_shortest_path_to_food(data):
         print(f"first_shortest_path_to_food:{first_shortest_path_to_food}")
         path = first_shortest_path_to_food
     else:
+        print("no first_shortest_path_to_food")
         print("chase tail")
         snakes_without_my_body = list(
             filter(lambda s: s["body"] != data["you"]["body"], data["board"]["snakes"])
@@ -252,9 +270,12 @@ def get_move_in_shortest_path_to_food(data):
             data["board"]["height"],
             data["board"]["width"],
             data["you"]["body"][-1],
+            data["board"]["food"],
         )
         print_min_step_to_reach_matrix(min_step_to_reach_matrix)
         print(f"path_to_tail:{paths_to_tail}")
+        if len(paths_to_tail)==0:
+            return None
         path = paths_to_tail[0]  # first shortest path to tail
     # print(f'path:{path}')
     step0 = path[0]
@@ -273,7 +294,9 @@ def choose_move(data: dict) -> str:
     print(f'\n\nturn:{data["turn"]}\n, data:{data}')
     # return get_move_with_max_free_space(data)
     direction = get_move_in_shortest_path_to_food(data)
+    if direction == None:
+        mmfs = MoverMaxFreeSpace()
+        direction = mmfs.get_move_with_max_free_space(data)
     print(f'turn:{data["turn"]}, direction:{direction}')
     print("=======================\n\n")
     return direction
-
